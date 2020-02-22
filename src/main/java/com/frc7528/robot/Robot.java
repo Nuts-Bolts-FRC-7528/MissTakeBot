@@ -1,11 +1,13 @@
 package com.frc7528.robot;
 
 import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -25,6 +27,8 @@ public class Robot extends TimedRobot {
     private SendableChooser<Double> deadBandOptions = new SendableChooser<>();
     private double fineControlSpeedDouble;
     private SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yy HH:mm:ss");
+    private NetworkTable limelight_table = NetworkTableInstance.getDefault().getTable("limelight");
+    private NetworkTableEntry ledStatusEntry = Shuffleboard.getTab("DRIVETRAIN").add("LED Status", "OFF").getEntry();
 
     /**
      * Configure Victors, SendableChoosers, and initial debug statistics
@@ -56,6 +60,9 @@ public class Robot extends TimedRobot {
         m_drive = new DifferentialDrive(m_leftFront,m_rightFront);
         Shuffleboard.getTab("DRIVETRAIN").add(m_drive);
 
+        //Put Limelight LED Status to Shuffleboard
+        ledStatusEntry.setString("OFF");
+
         //Fine Control Speed chooser
         fineControlSpeed.addOption("35% Speed", 0.35);
         fineControlSpeed.addOption("40% Speed", 0.40);
@@ -63,13 +70,13 @@ public class Robot extends TimedRobot {
         fineControlSpeed.addOption("50% Speed", 0.50);
         fineControlSpeed.addOption("55% Speed", 0.55);
         fineControlSpeed.addOption("60% Speed", 0.60);
-        SmartDashboard.putData("Fine Control Speed", fineControlSpeed);
+        Shuffleboard.getTab("SETUP").add("Fine Control Speed", fineControlSpeed);
 
         //Deadband chooser
         deadBandOptions.setDefaultOption("5%", 0.05);
         deadBandOptions.addOption("10%", 0.10);
         deadBandOptions.addOption("15%", 0.15);
-        SmartDashboard.putData("Dead Band", deadBandOptions);
+        Shuffleboard.getTab("SETUP").add("Dead Band", deadBandOptions);
 
         //Transmits video through cameras
         CameraServer.getInstance().startAutomaticCapture();
@@ -104,5 +111,27 @@ public class Robot extends TimedRobot {
             //Arcade Drive
             m_drive.arcadeDrive(-m_joy.getY(), m_joy.getX());
         }
+
+        //Limelight LED Control
+        if(m_joy.getRawButtonPressed(5)) {
+            limelight_table.getEntry("ledMode").setNumber(1); //Off
+            ledStatusEntry.setString("OFF");
+        }
+
+        if(m_joy.getRawButtonPressed(6)) {
+            limelight_table.getEntry("ledMode").setNumber(2); //Blink
+            ledStatusEntry.setString("BLINK");
+        }
+
+        if(m_joy.getRawButtonPressed(3)) {
+            limelight_table.getEntry("ledMode").setNumber(3); //On
+            ledStatusEntry.setString("ON");
+        }
+    }
+
+    @Override
+    public void disabledInit() {
+        limelight_table.getEntry("ledMode").setNumber(1); //Disable limelight LEDs after match end
+        ledStatusEntry.setString("OFF");
     }
 }
