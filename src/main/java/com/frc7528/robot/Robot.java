@@ -80,7 +80,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void teleopInit() {
-        fineControlSpeedDouble = fineControlSpeed.getSelected(); //Set fine control speed
+        fineControlSpeedDouble = -fineControlSpeed.getSelected(); //Set fine control speed
         m_drive.setDeadband(deadBandOptions.getSelected()); //Set deadband
     }
 
@@ -102,7 +102,7 @@ public class Robot extends TimedRobot {
         } else {
 
             //Arcade Drive
-            m_drive.arcadeDrive(m_joy.getY(), -m_joy.getX());
+            m_drive.arcadeDrive(-m_joy.getY(), m_joy.getX());
         }
     }
 }
