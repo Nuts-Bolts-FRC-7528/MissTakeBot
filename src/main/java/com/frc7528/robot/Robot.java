@@ -29,6 +29,12 @@ public class Robot extends TimedRobot {
     private SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yy HH:mm:ss");
     private NetworkTable limelight_table = NetworkTableInstance.getDefault().getTable("limelight");
     private NetworkTableEntry ledStatusEntry = Shuffleboard.getTab("DRIVETRAIN").add("LED Status", "OFF").getEntry();
+    private NetworkTableEntry ll3dEntry = Shuffleboard.getTab("DRIVETRAIN").add("Limelight 3D stuff", new Number[0]).getEntry();
+    private NetworkTableEntry sensorEntry = Shuffleboard.getTab("DEBUG").add("Sensor value", false).getEntry();
+    private NetworkTableEntry ballEntry = Shuffleboard.getTab("DEBUG").add("Ball Count",0).getEntry();
+
+    private static boolean isReadingBall = false;
+    public static int powerCellCount = 0;
 
     /**
      * Configure Victors, SendableChoosers, and initial debug statistics
@@ -82,6 +88,25 @@ public class Robot extends TimedRobot {
         CameraServer.getInstance().startAutomaticCapture();
     }
 
+    @Override
+    public void robotPeriodic() {
+        ll3dEntry.setNumberArray(limelight_table.getEntry("camtran").getNumberArray(new Number[0]));
+        sensorEntry.setBoolean(ballCounter.get());
+        ballEntry.setNumber(powerCellCount);
+
+        if(!ballCounter.get() && !isReadingBall) { //If ball sensor is reading ball being intaked
+            powerCellCount++; //Increase power cell count by one
+            isReadingBall = true; //Prevent reading multiple power cells at once
+        }
+        if(ballCounter.get() && isReadingBall) {
+            isReadingBall = false;
+        }
+
+        if(m_joy.getRawButtonPressed(4)) {
+            powerCellCount = 0;
+        }
+    }
+
     /**
      * Sets fine control speed and deadband
      */
@@ -127,11 +152,20 @@ public class Robot extends TimedRobot {
             limelight_table.getEntry("ledMode").setNumber(3); //On
             ledStatusEntry.setString("ON");
         }
+
+        //Limelight Driver Cam Mode
+        if(m_joy.getRawButtonPressed(12)) {
+            limelight_table.getEntry("camMode").setNumber(0); //Vision Processor
+        }
+
+        if(m_joy.getRawButtonPressed(11)) {
+            limelight_table.getEntry("camMode").setNumber(1); //Driver Cam
+        }
     }
 
     @Override
     public void disabledInit() {
-        limelight_table.getEntry("ledMode").setNumber(1); //Disable limelight LEDs after match end
-        ledStatusEntry.setString("OFF");
+        limelight_table.getEntry("ledMode").setNumber(0); //Reset limelight LEDs after match end
+//        ledStatusEntry.setString("OFF");
     }
 }
