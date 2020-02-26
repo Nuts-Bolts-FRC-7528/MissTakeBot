@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -35,6 +36,12 @@ public class Robot extends TimedRobot {
 
     private static boolean isReadingBall = false;
     public static int powerCellCount = 0;
+
+    public static double d; // The distance to the target
+    private static double a2; // The angle from the limelight
+    private static final double a1 = 42; // The angle the limelight is mounted at
+    private static final double h1 = 11.25; // The height the limelight is mounted at
+    private static final double h2 = 98.25; // The height of the target
 
     /**
      * Configure Victors, SendableChoosers, and initial debug statistics
@@ -105,6 +112,10 @@ public class Robot extends TimedRobot {
         if(m_joy.getRawButtonPressed(4)) {
             powerCellCount = 0;
         }
+
+        a2 = limelight_table.getEntry("ty").getDouble(0); // Sets a2, the y position of the target
+        d = Math.round((h2-h1) * 12 / Math.tan(Math.toRadians(a1+a2))); // Finds the distance
+        SmartDashboard.putNumber("distance",d);
     }
 
     /**
