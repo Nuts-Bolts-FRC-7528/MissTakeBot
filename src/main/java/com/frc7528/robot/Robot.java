@@ -102,7 +102,6 @@ public class Robot extends TimedRobot {
         a2 = limelight_table.getEntry("ty").getDouble(0); // Sets a2, the y position of the target
         d = Math.round((h2-h1) * 12 / Math.tan(Math.toRadians(a1+a2))); // Finds the distance
         SmartDashboard.putNumber("distance",d);
-        SmartDashboard.putBoolean("Inversion", isInverted);
     }
 
     /**
