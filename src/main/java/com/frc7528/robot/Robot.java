@@ -22,6 +22,7 @@ import static com.frc7528.robot.common.RobotMap.*;
  * creating this project, you must also update the build.gradle file in the
  * project.
  */
+@SuppressWarnings("FieldCanBeLocal")
 public class Robot extends TimedRobot {
 
     private SendableChooser<Double> fineControlSpeed = new SendableChooser<>();
@@ -31,17 +32,15 @@ public class Robot extends TimedRobot {
     private NetworkTable limelight_table = NetworkTableInstance.getDefault().getTable("limelight");
     private NetworkTableEntry ledStatusEntry = Shuffleboard.getTab("DRIVETRAIN").add("LED Status", "OFF").getEntry();
     private NetworkTableEntry ll3dEntry = Shuffleboard.getTab("DRIVETRAIN").add("Limelight 3D stuff", new Number[0]).getEntry();
-    private NetworkTableEntry sensorEntry = Shuffleboard.getTab("DEBUG").add("Sensor value", false).getEntry();
-    private NetworkTableEntry ballEntry = Shuffleboard.getTab("DEBUG").add("Ball Count",0).getEntry();
-
-    private static boolean isReadingBall = false;
-    public static int powerCellCount = 0;
+    private NetworkTableEntry inversionEntry = Shuffleboard.getTab("DEBUG").add("Inversion", false).getEntry();
 
     public static double d; // The distance to the target
     private static double a2; // The angle from the limelight
     private static final double a1 = 42; // The angle the limelight is mounted at
     private static final double h1 = 11.25; // The height the limelight is mounted at
     private static final double h2 = 98.25; // The height of the target
+
+    private boolean isInverted = false;
 
     /**
      * Configure Victors, SendableChoosers, and initial debug statistics
@@ -98,24 +97,12 @@ public class Robot extends TimedRobot {
     @Override
     public void robotPeriodic() {
         ll3dEntry.setNumberArray(limelight_table.getEntry("camtran").getNumberArray(new Number[0]));
-        sensorEntry.setBoolean(ballCounter.get());
-        ballEntry.setNumber(powerCellCount);
-
-        if(!ballCounter.get() && !isReadingBall) { //If ball sensor is reading ball being intaked
-            powerCellCount++; //Increase power cell count by one
-            isReadingBall = true; //Prevent reading multiple power cells at once
-        }
-        if(ballCounter.get() && isReadingBall) {
-            isReadingBall = false;
-        }
-
-        if(m_joy.getRawButtonPressed(4)) {
-            powerCellCount = 0;
-        }
+        inversionEntry.setBoolean(isInverted);
 
         a2 = limelight_table.getEntry("ty").getDouble(0); // Sets a2, the y position of the target
         d = Math.round((h2-h1) * 12 / Math.tan(Math.toRadians(a1+a2))); // Finds the distance
         SmartDashboard.putNumber("distance",d);
+        SmartDashboard.putBoolean("Inversion", isInverted);
     }
 
     /**
@@ -145,9 +132,16 @@ public class Robot extends TimedRobot {
         } else {
 
             //Arcade Drive
-            m_drive.arcadeDrive(-m_joy.getY(), m_joy.getX());
+            if (isInverted) {
+                m_drive.arcadeDrive(m_joy.getY(), m_joy.getX());
+            } else {
+                m_drive.arcadeDrive(-m_joy.getY(), m_joy.getX());
+            }
         }
 
+        if (m_joy.getRawButton(2)) {
+            isInverted = !isInverted;
+        }
         //Limelight LED Control
         if(m_joy.getRawButtonPressed(5)) {
             limelight_table.getEntry("ledMode").setNumber(1); //Off

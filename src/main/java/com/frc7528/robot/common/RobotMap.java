@@ -16,6 +16,4 @@ public class RobotMap {
 
     //Operator interface
     public static Joystick m_joy = new Joystick(0);
-
-    public static DigitalInput ballCounter = new DigitalInput(9);
 }
